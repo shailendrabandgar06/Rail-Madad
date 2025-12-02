@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RailMadad - Railway Grievance Redressal System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .animated-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        /* Status message styles */
+        .status-message {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        .status-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #34d399;
+        }
+        .status-error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #f87171;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="bg-white rounded-full p-2">
+                    <i class="fas fa-train text-blue-600 text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold">RailMadad</h1>
+                    <p class="text-xs text-blue-200">Indian Railways Grievance Portal</p>
+                </div>
+            </div>
+            <nav class="hidden md:flex space-x-6">
+                <a href="#" class="hover:text-blue-200 font-medium">Home</a>
+                <a href="#" class="hover:text-blue-200 font-medium" onclick="openComplaintModal()">Lodge Complaint</a>
+                <a href="#" class="hover:text-blue-200 font-medium" onclick="openStatusModal()">Track Status</a>
+                <a href="#" class="hover:text-blue-200 font-medium">FAQs</a>
+                <a href="#" class="hover:text-blue-200 font-medium">Contact</a>
+            </nav>
+            <div class="flex items-center space-x-4">
+                <button class="bg-white text-blue-600 px-4 py-2 rounded-full font-medium hover:bg-blue-50 transition">
+                    <i class="fas fa-user mr-2"></i>Login
+                </button>
+                <button class="md:hidden text-white" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Menu (hidden by default) -->
+    <div id="mobileMenu" class="md:hidden hidden bg-blue-800 text-white py-4 px-4">
+        <a href="#" class="block py-2 hover:text-blue-200" onclick="toggleMobileMenu()">Home</a>
+        <a href="#" class="block py-2 hover:text-blue-200" onclick="openComplaintModal(); toggleMobileMenu()">Lodge Complaint</a>
+        <a href="#" class="block py-2 hover:text-blue-200" onclick="openStatusModal(); toggleMobileMenu()">Track Status</a>
+        <a href="#" class="block py-2 hover:text-blue-200" onclick="toggleMobileMenu()">FAQs</a>
+        <a href="#" class="block py-2 hover:text-blue-200" onclick="toggleMobileMenu()">Contact</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-16">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-10 md:mb-0">
+                <h2 class="text-4xl font-bold mb-4">Your Voice Matters in Indian Railways</h2>
+                <p class="text-xl mb-6 text-blue-100">Report issues, track complaints, and get quick resolutions for all your railway-related concerns.</p>
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                    <button class="bg-white text-blue-600 px-6 py-3 rounded-full font-bold hover:bg-blue-50 transition pulse" onclick="openComplaintModal()">
+                        <i class="fas fa-plus-circle mr-2"></i>Lodge Complaint
+                    </button>
+                    <button class="bg-transparent border-2 border-white text-white px-6 py-3 rounded-full font-bold hover:bg-white hover:text-blue-600 transition" onclick="openStatusModal()">
+                        <i class="fas fa-search mr-2"></i>Track Status
+                    </button>
+                </div>
+            </div>
+            <div class="md:w-1/2 flex justify-center">
+                <img src="https://illustrations.popsy.co/amber/digital-nomad.svg" alt="Customer Support" class="w-full max-w-md">
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="py-12 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">How Can We Help You Today?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-gray-50 rounded-xl p-6 shadow-md transition duration-300 card-hover">
+                    <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-ticket-alt text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-800">Reservation Issues</h3>
+                    <p class="text-gray-600 mb-4">Problems with ticket booking, cancellation, refunds or chart preparation.</p>
+                    <button class="text-blue-600 font-medium flex items-center" onclick="openComplaintModal('Reservation Issues')">
+                        Report Issue <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-6 shadow-md transition duration-300 card-hover">
+                    <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-concierge-bell text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-800">Onboard Services</h3>
+                    <p class="text-gray-600 mb-4">Issues with cleanliness, catering, coach maintenance or staff behavior.</p>
+                    <button class="text-green-600 font-medium flex items-center" onclick="openComplaintModal('Onboard Services')">
+                        Report Issue <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-6 shadow-md transition duration-300 card-hover">
+                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-exclamation-triangle text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-800">Safety Concerns</h3>
+                    <p class="text-gray-600 mb-4">Report safety hazards, security issues or emergency situations.</p>
+                    <button class="text-purple-600 font-medium flex items-center" onclick="openComplaintModal('Safety Concerns')">
+                        Report Issue <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Complaint Status Check -->
+    <section class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="md:flex">
+                    <div class="md:w-1/2 bg-blue-600 text-white p-8 flex flex-col justify-center">
+                        <h2 class="text-2xl font-bold mb-4">Check Your Complaint Status</h2>
+                        <p class="mb-6">Enter your complaint reference number to track the current status and get updates on resolution.</p>
+                        <div class="flex items-center">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            <p class="text-sm">Don't have reference number? <a href="#" class="underline" onclick="openComplaintModal()">Click here</a></p>
+                        </div>
+                    </div>
+                    <div class="md:w-1/2 p-8">
+                        <form id="statusForm">
+                            <div class="mb-6">
+                                <label for="refNumber" class="block text-gray-700 font-medium mb-2">Reference Number</label>
+                                <input type="text" id="refNumber" class="w-full px-4 py-3 border rounded-lg focus:outline-none animated-input" placeholder="Enter your complaint reference number" required>
+                            </div>
+                            <div class="mb-6">
+                                <label for="mobile" class="block text-gray-700 font-medium mb-2">Registered Mobile Number</label>
+                                <input type="tel" id="mobile" class="w-full px-4 py-3 border rounded-lg focus:outline-none animated-input" placeholder="Enter registered mobile number" required>
+                            </div>
+                            <button type="submit" class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center">
+                                <i class="fas fa-search mr-2"></i> Track Status
+                            </button>
+                        </form>
+                        <div id="statusResult" class="mt-4 hidden">
+                            <h3 class="text-lg font-bold mb-2">Complaint Status</h3>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p><strong>Reference No.:</strong> <span id="statusRefNo"></span></p>
+                                <p><strong>Status:</strong> <span id="statusText"></span></p>
+                                <p><strong>Date:</strong> <span id="statusDate"></span></p>
+                                <p><strong>Resolution:</strong> <span id="statusResolution"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">Our Impact in Numbers</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                <div class="bg-blue-50 p-6 rounded-xl">
+                    <div class="text-4xl font-bold text-blue-600 mb-2" id="resolvedCount">0</div>
+                    <div class="text-gray-600">Complaints Resolved</div>
+                </div>
+                <div class="bg-green-50 p-6 rounded-xl">
+                    <div class="text-4xl font-bold text-green-600 mb-2">92%</div>
+                    <div class="text-gray-600">Satisfaction Rate</div>
+                </div>
+                <div class="bg-purple-50 p-6 rounded-xl">
+                    <div class="text-4xl font-bold text-purple-600 mb-2">24-48</div>
+                    <div class="text-gray-600">Hours Average Resolution</div>
+                </div>
+                <div class="bg-yellow-50 p-6 rounded-xl">
+                    <div class="text-4xl font-bold text-yellow-600 mb-2" id="totalComplaints">0</div>
+                    <div class="text-gray-600">Total Complaints</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Emergency Section -->
+    <section class="py-16 bg-red-600 text-white">
+        <div class="container mx-auto px-4 text-center">
+            <div class="max-w-3xl mx-auto">
+                <div class="bg-white text-red-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-exclamation-triangle text-3xl"></i>
+                </div>
+                <h2 class="text-3xl font-bold mb-4">Emergency Assistance</h2>
+                <p class="text-xl mb-8">For immediate help during your journey, please contact the railway emergency numbers:</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                        <div class="text-2xl font-bold mb-2">182</div>
+                        <p>Security Helpline</p>
+                    </div>
+                    <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                        <div class="text-2xl font-bold mb-2">139</div>
+                        <p>General Enquiry</p>
+                    </div>
+                    <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                        <div class="text-2xl font-bold mb-2">1072</div>
+                        <p>Medical Emergency</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white pt-12 pb-6">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">RailMadad</h3>
+                    <p class="text-gray-400">The official grievance redressal portal of Indian Railways committed to providing quick resolutions to passenger concerns.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Home</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition" onclick="openComplaintModal()">Lodge Complaint</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition" onclick="openStatusModal()">Track Status</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">FAQs</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Resources</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">IRCTC Website</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Railway Board</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Train Schedule</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Fare Calculator</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Connect With Us</h4>
+                    <div class="flex space-x-4 mb-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-600 transition">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-400 transition">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-red-600 transition">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-700 transition">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                    <p class="text-gray-400">Download Mobile App:</p>
+                    <div class="flex space-x-2 mt-2">
+                        <button class="bg-black text-white px-3 py-1 rounded flex items-center text-sm">
+                            <i class="fab fa-apple mr-1"></i> App Store
+                        </button>
+                        <button class="bg-black text-white px-3 py-1 rounded flex items-center text-sm">
+                            <i class="fab fa-google-play mr-1"></i> Play Store
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-6 border-t border-gray-800 text-center text-gray-400 text-sm">
+                <p>© 2023 RailMadad - Indian Railways Grievance Portal. All Rights Reserved.</p>
+                <p class="mt-2">Designed and Developed by Ministry of Railways, Government of India</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Complaint Modal -->
+    <div id="complaintModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Lodge New Complaint</h3>
+                <button onclick="closeModal('complaintModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="complaintForm">
+                <div class="mb-4">
+                    <label for="complaintType" class="block text-gray-700 font-medium mb-2">Complaint Type</label>
+                    <select id="complaintType" class="w-full px-4 py-3 border rounded-lg focus:outline-none animated-input" required>
+                        <option value="">Select complaint type</option>
+                        <option value="Reservation Issues">Reservation Issues</option>
+                        <option value="Onboard Services">Onboard Services</option>
+                        <option value="Safety Concerns">Safety Concerns</option>
+                        <option value="Station Facilities">Station Facilities</option>
+                        <option value="Refund Problems">Refund Problems</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="name" class="block text-gray-700 font-medium mb-2">Full Name</label>
+                    <input type="text" id="name" class="w-full px-4 py-3 border rounded-lg focus:outline-none animated-input" placeholder="Your full name" required>
+                </div>
+                <div class="mb-4">
+                    <label for="email" class="block text-gray-700 font-medium mb-2">Email Address</label>
+                    <input type="email" id="email" class="w-full px-4 py-3 border rounded-lg focus:outline-none animated-input" placeholder="Your email address">
+                </div>
+                <div class="mb-4">
+                    <label for="phone" class="block text-gray-700 font-medium mb-2">Mobile Number</label>
+                    <input type="tel" id="phone" class="w-full px-4 py-3 border rounded-lg focus:outline-none animated-input" placeholder="Your mobile number" required>
+                </div>
+                <div class="mb-4">
+                    <label for="trainNumber" class="block text-gray-700 font-medium mb-2">Train Number (if applicable)</label>
+                    <input type="text" id="trainNumber" class="w-full px-4 py-3 border rounded-lg focus:outline-none animated-input" placeholder="Train number">
+                </div>
+                <div class="mb-4">
+                    <label for="pnr" class="block text-gray-700 font-medium mb-2">PNR Number (if applicable)</label>
+                    <input type="text" id="pnr" class="w-full px-4 py-3 border rounded-lg focus:outline-none animated-input" placeholder="PNR number">
+                </div>
+                <div class="mb-4">
+                    <label for="description" class="block text-gray-700 font-medium mb-2">Complaint Details</label>
+                    <textarea id="description" rows="4" class="w-full px-4 py-3 border rounded-lg focus:outline-none animated-input" placeholder="Describe your complaint in detail" required></textarea>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition">
+                    Submit Complaint
+                </button>
+            </form>
+            <div id="complaintSuccess" class="status-message status-success mt-4">
+                Complaint submitted successfully! Your reference number is: <span id="refNumberDisplay"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Modal -->
+    <div id="statusModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Check Complaint Status</h3>
+                <button onclick="closeModal('statusModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="modalStatusForm">
+                <div class="mb-4">
+                    <label for="modalRefNumber" class="block text-gray-700 font-medium mb-2">Reference Number</label>
+                    <input type="text" id="modalRefNumber" class="w-full px-4 py-3 border rounded-lg focus:outline-none animated-input" placeholder="Enter your complaint reference number" required>
+                </div>
+                <div class="mb-4">
+                    <label for="modalMobile" class="block text-gray-700 font-medium mb-2">Registered Mobile Number</label>
+                    <input type="tel" id="modalMobile" class="w-full px-4 py-3 border rounded-lg focus:outline-none animated-input" placeholder="Enter registered mobile number" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center">
+                    <i class="fas fa-search mr-2"></i> Track Status
+                </button>
+            </form>
+            <div id="modalStatusResult" class="mt-4 hidden">
+                <h3 class="text-lg font-bold mb-2">Complaint Status</h3>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p><strong>Reference No.:</strong> <span id="modalStatusRefNo"></span></p>
+                    <p><strong>Type:</strong> <span id="modalStatusType"></span></p>
+                    <p><strong>Status:</strong> <span id="modalStatusText"></span></p>
+                    <p><strong>Date Submitted:</strong> <span id="modalStatusDate"></span></p>
+                    <p><strong>Resolution:</strong> <span id="modalStatusResolution"></span></p>
+                </div>
+                <button onclick="closeModal('statusModal')" class="mt-4 w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-lg font-medium hover:bg-gray-300 transition">
+                    Close
+                </button>
+            </div>
+            <div id="statusError" class="status-message status-error mt-4">
+                Complaint not found or mobile number doesn't match. Please check your details and try again.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize localStorage if not exists
+        if (!localStorage.getItem('railmadad_complaints')) {
+            localStorage.setItem('railmadad_complaints', JSON.stringify([]));
+        }
+
+        // Generate a random reference number
+        function generateReferenceNumber() {
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const randomLetter = letters.charAt(Math.floor(Math.random() * letters.length));
+            const randomNumbers = Math.floor(100000 + Math.random() * 900000);
+            return `RM-${randomLetter}${randomNumbers}`;
+        }
+
+        // Get current date in readable format
+        function getCurrentDate() {
+            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return new Date().toLocaleDateString('en-IN', options);
+        }
+
+        // Open modal
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Open complaint modal with optional preset type
+        function openComplaintModal(type = '') {
+            if (type) {
+                document.getElementById('complaintType').value = type;
+            }
+            openModal('complaintModal');
+            document.getElementById('complaintSuccess').style.display = 'none';
+        }
+
+        // Open status modal
+        function openStatusModal() {
+            openModal('statusModal');
+            document.getElementById('modalStatusResult').classList.add('hidden');
+            document.getElementById('statusError').style.display = 'none';
+        }
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Submit complaint form
+        document.getElementById('complaintForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const complaint = {
+                id: generateReferenceNumber(),
+                type: document.getElementById('complaintType').value,
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                trainNumber: document.getElementById('trainNumber').value,
+                pnr: document.getElementById('pnr').value,
+                description: document.getElementById('description').value,
+                status: 'Received',
+                date: getCurrentDate(),
+                resolution: '',
+                resolvedDate: ''
+            };
+
+            // Save to localStorage
+            const complaints = JSON.parse(localStorage.getItem('railmadad_complaints'));
+            complaints.push(complaint);
+            localStorage.setItem('railmadad_complaints', JSON.stringify(complaints));
+
+            // Show success message
+            document.getElementById('refNumberDisplay').textContent = complaint.id;
+            document.getElementById('complaintSuccess').style.display = 'block';
+            
+            // Reset form
+            this.reset();
+            
+            // Update statistics
+            updateStatistics();
+        });
+
+        // Submit status form (main section)
+        document.getElementById('statusForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            checkStatus(
+                document.getElementById('refNumber').value,
+                document.getElementById('mobile').value,
+                'statusResult',
+                'statusRefNo',
+                'statusText',
+                'statusDate',
+                'statusResolution'
+            );
+        });
+
+        // Submit status form (modal)
+        document.getElementById('modalStatusForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const found = checkStatus(
+                document.getElementById('modalRefNumber').value,
+                document.getElementById('modalMobile').value,
+                'modalStatusResult',
+                'modalStatusRefNo',
+                'modalStatusText',
+                'modalStatusDate',
+                'modalStatusResolution',
+                'modalStatusType'
+            );
+            
+            if (found) {
+                document.getElementById('modalStatusResult').classList.remove('hidden');
+                document.getElementById('statusError').style.display = 'none';
+            } else {
+                document.getElementById('statusError').style.display = 'block';
+            }
+        });
+
+        // Check complaint status
+        function checkStatus(refNumber, mobile, resultId, refId, statusId, dateId, resolutionId, typeId = null) {
+            const complaints = JSON.parse(localStorage.getItem('railmadad_complaints'));
+            const complaint = complaints.find(c => c.id === refNumber && c.phone === mobile);
+            
+            if (complaint) {
+                document.getElementById(refId).textContent = complaint.id;
+                if (typeId) document.getElementById(typeId).textContent = complaint.type;
+                document.getElementById(statusId).textContent = complaint.status;
+                document.getElementById(dateId).textContent = complaint.date;
+                document.getElementById(resolutionId).textContent = complaint.resolution || 'Not resolved yet';
+                document.getElementById(resultId).classList.remove('hidden');
+                return true;
+            }
+            return false;
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const complaints = JSON.parse(localStorage.getItem('railmadad_complaints'));
+            const resolvedCount = complaints.filter(c => c.status === 'Resolved').length;
+            
+            document.getElementById('totalComplaints').textContent = complaints.length;
+            document.getElementById('resolvedCount').textContent = resolvedCount;
+        }
+
+        // Initialize statistics on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatistics();
+            
+            // Close modals when clicking outside
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeModal(this.id);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

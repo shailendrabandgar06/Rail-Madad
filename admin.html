@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Railmadad Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        .sidebar-collapsed {
+            width: 80px;
+        }
+        .sidebar-collapsed .nav-text {
+            display: none;
+        }
+        .sidebar-collapsed .logo-text {
+            display: none;
+        }
+        .sidebar-collapsed .nav-item {
+            justify-content: center;
+        }
+        .content {
+            transition: margin-left 0.3s ease;
+        }
+        .content-expanded {
+            margin-left: 250px;
+        }
+        .content-collapsed {
+            margin-left: 80px;
+        }
+        .complaint-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .chart-container {
+            height: 300px;
+        }
+        .status-message {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        .status-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #34d399;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Sidebar -->
+    <div class="sidebar fixed inset-y-0 left-0 bg-blue-800 text-white w-64 shadow-lg" id="sidebar">
+        <div class="flex items-center justify-between p-4 border-b border-blue-700">
+            <div class="flex items-center space-x-2">
+                <img src="https://www.indianrailways.gov.in/railwayboard/images/logo.png" alt="Logo" class="h-10">
+                <span class="logo-text text-xl font-bold">Railmadad Admin</span>
+            </div>
+            <button id="toggleSidebar" class="text-white focus:outline-none">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <nav class="p-4">
+            <ul class="space-y-2">
+                <li>
+                    <a href="#" class="nav-item flex items-center p-3 rounded-lg bg-blue-700 text-white">
+                        <i class="fas fa-tachometer-alt mr-3"></i>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-item flex items-center p-3 rounded-lg hover:bg-blue-700 text-white" onclick="loadComplaints()">
+                        <i class="fas fa-exclamation-circle mr-3"></i>
+                        <span class="nav-text">Complaints</span>
+                        <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full" id="pendingCount">0</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-item flex items-center p-3 rounded-lg hover:bg-blue-700 text-white">
+                        <i class="fas fa-users mr-3"></i>
+                        <span class="nav-text">Users</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-item flex items-center p-3 rounded-lg hover:bg-blue-700 text-white">
+                        <i class="fas fa-train mr-3"></i>
+                        <span class="nav-text">Trains</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-item flex items-center p-3 rounded-lg hover:bg-blue-700 text-white">
+                        <i class="fas fa-chart-bar mr-3"></i>
+                        <span class="nav-text">Reports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-item flex items-center p-3 rounded-lg hover:bg-blue-700 text-white">
+                        <i class="fas fa-cog mr-3"></i>
+                        <span class="nav-text">Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-blue-700">
+            <div class="flex items-center space-x-3">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" class="h-10 w-10 rounded-full">
+                <div class="nav-text">
+                    <p class="font-medium">Admin User</p>
+                    <p class="text-xs text-blue-200">Super Admin</p>
+                </div>
+                <button class="ml-auto text-blue-200 hover:text-white">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content min-h-screen content-expanded" id="content">
+        <!-- Top Navigation -->
+        <header class="bg-white shadow-sm">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+                    <div class="relative">
+                        <input type="text" placeholder="Search..." class="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" id="searchComplaints">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="text-gray-500 hover:text-gray-700 relative">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center" id="notificationCount">0</span>
+                    </button>
+                    <button class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-envelope text-xl"></i>
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" class="h-8 w-8 rounded-full">
+                        <span class="text-gray-700 font-medium">Admin</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="p-6">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6" id="statsCards">
+                <!-- Stats will be loaded dynamically -->
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Complaints by Category</h3>
+                        <select class="border rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" id="categoryFilter">
+                            <option>Last 7 Days</option>
+                            <option>Last 30 Days</option>
+                            <option selected>Last 90 Days</option>
+                            <option>This Year</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Resolution Status</h3>
+                        <select class="border rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" id="statusFilter">
+                            <option>Last 7 Days</option>
+                            <option>Last 30 Days</option>
+                            <option selected>Last 90 Days</option>
+                            <option>This Year</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Complaints -->
+            <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 class="text-lg font-semibold text-gray-800">Recent Complaints</h3>
+                    <button class="text-blue-600 hover:text-blue-800 font-medium" onclick="loadComplaints()">View All</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200" id="complaintsTable">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Train</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="complaintsTableBody">
+                            <!-- Complaints will be loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-4 border-t flex items-center justify-between">
+                    <div class="text-sm text-gray-500">
+                        Showing <span class="font-medium" id="startItem">1</span> to <span class="font-medium" id="endItem">5</span> of <span class="font-medium" id="totalItems">0</span> results
+                    </div>
+                    <div class="flex space-x-2" id="pagination">
+                        <!-- Pagination will be loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 class="text-lg font-semibold text-gray-800">Recent Activity</h3>
+                    <button class="text-blue-600 hover:text-blue-800 font-medium">View All</button>
+                </div>
+                <div class="divide-y divide-gray-200" id="recentActivity">
+                    <!-- Activity will be loaded dynamically -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Complaint Detail Modal -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" id="complaintDetailModal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b p-4">
+                <h3 class="text-xl font-semibold text-gray-800">Complaint Details - <span id="complaintIdDisplay"></span></h3>
+                <button class="text-gray-500 hover:text-gray-700" id="closeDetailModalBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h4 class="text-lg font-medium text-gray-800 mb-3">Complaint Information</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm text-gray-500">Category</p>
+                                <p class="font-medium" id="complaintCategory"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Train</p>
+                                <p class="font-medium" id="complaintTrain"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Journey Date</p>
+                                <p class="font-medium" id="complaintDate"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Status</p>
+                                <p class="font-medium" id="complaintStatus"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-medium text-gray-800 mb-3">Passenger Details</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm text-gray-500">Name</p>
+                                <p class="font-medium" id="passengerName"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Contact</p>
+                                <p class="font-medium" id="passengerContact"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">PNR</p>
+                                <p class="font-medium" id="passengerPnr"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Email</p>
+                                <p class="font-medium" id="passengerEmail"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="text-lg font-medium text-gray-800 mb-3">Complaint Description</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg" id="complaintDescription">
+                        <!-- Description will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="text-lg font-medium text-gray-800 mb-3">Resolution</h4>
+                    <textarea class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-32" placeholder="Enter resolution details..." id="resolutionTextarea"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button class="px-6 py-2 border rounded-lg text-gray-700 hover:bg-gray-100 transition" onclick="escalateComplaint()">Escalate</button>
+                    <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition" onclick="saveResolution()">Save Changes</button>
+                    <button class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition" onclick="resolveComplaint()">Mark as Resolved</button>
+                </div>
+                <div id="successMessage" class="status-message status-success mt-4">
+                    Complaint updated successfully!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // Current complaint being viewed
+        let currentComplaintId = null;
+        
+        // Toggle sidebar
+        const sidebar = document.getElementById('sidebar');
+        const content = document.getElementById('content');
+        const toggleSidebar = document.getElementById('toggleSidebar');
+        
+        toggleSidebar.addEventListener('click', () => {
+            sidebar.classList.toggle('sidebar-collapsed');
+            content.classList.toggle('content-expanded');
+            content.classList.toggle('content-collapsed');
+        });
+
+        // Initialize dashboard on load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+            loadComplaints();
+            
+            // Set up search functionality
+            document.getElementById('searchComplaints').addEventListener('input', function() {
+                filterComplaints(this.value);
+            });
+        });
+
+        // Load dashboard stats and charts
+        function loadDashboard() {
+            const complaints = JSON.parse(localStorage.getItem('railmadad_complaints')) || [];
+            
+            // Calculate stats
+            const totalComplaints = complaints.length;
+            const pendingComplaints = complaints.filter(c => c.status === 'Received' || c.status === 'In Progress').length;
+            const resolvedComplaints = complaints.filter(c => c.status === 'Resolved').length;
+            
+            // Update stats cards
+            document.getElementById('statsCards').innerHTML = `
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Total Complaints</p>
+                            <h3 class="text-3xl font-bold text-gray-800">${totalComplaints}</h3>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <i class="fas fa-exclamation-circle text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-green-500 text-sm font-medium">All time complaints</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Pending Complaints</p>
+                            <h3 class="text-3xl font-bold text-gray-800">${pendingComplaints}</h3>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-full">
+                            <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-red-500 text-sm font-medium">Require attention</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Resolved Complaints</p>
+                            <h3 class="text-3xl font-bold text-gray-800">${resolvedComplaints}</h3>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-green-500 text-sm font-medium">Successfully resolved</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500">Avg. Resolution Time</p>
+                            <h3 class="text-3xl font-bold text-gray-800">2.4 days</h3>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded-full">
+                            <i class="fas fa-stopwatch text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-green-500 text-sm font-medium">↓ 1.2 days from last month</span>
+                    </div>
+                </div>
+            `;
+            
+            // Update notification counts
+            document.getElementById('pendingCount').textContent = pendingComplaints;
+            document.getElementById('notificationCount').textContent = pendingComplaints;
+            
+            // Prepare data for charts
+            const categories = {};
+            const statuses = {};
+            
+            complaints.forEach(complaint => {
+                // Count by category
+                if (categories[complaint.type]) {
+                    categories[complaint.type]++;
+                } else {
+                    categories[complaint.type] = 1;
+                }
+                
+                // Count by status
+                if (statuses[complaint.status]) {
+                    statuses[complaint.status]++;
+                } else {
+                    statuses[complaint.status] = 1;
+                }
+            });
+            
+            // Create category chart
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            new Chart(categoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(categories),
+                    datasets: [{
+                        label: 'Complaints by Category',
+                        data: Object.values(categories),
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(139, 92, 246, 0.7)',
+                            'rgba(239, 68, 68, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(139, 92, 246, 1)',
+                            'rgba(239, 68, 68, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Create status chart
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            new Chart(statusCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(statuses),
+                    datasets: [{
+                        label: 'Complaints by Status',
+                        data: Object.values(statuses),
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)', // Received - blue
+                            'rgba(245, 158, 11, 0.7)', // In Progress - yellow
+                            'rgba(16, 185, 129, 0.7)', // Resolved - green
+                            'rgba(239, 68, 68, 0.7)'  // Escalated - red
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(239, 68, 68, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Load recent activity
+            loadRecentActivity();
+        }
+        
+        // Load complaints table
+        function loadComplaints(page = 1, searchTerm = '') {
+            const complaints = JSON.parse(localStorage.getItem('railmadad_complaints')) || [];
+            const itemsPerPage = 5;
+            let filteredComplaints = [...complaints].reverse(); // Show newest first
+            
+            // Apply search filter if term exists
+            if (searchTerm) {
+                filteredComplaints = filteredComplaints.filter(complaint => 
+                    complaint.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    complaint.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (complaint.trainNumber && complaint.trainNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                    complaint.name.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }
+            
+            const totalItems = filteredComplaints.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const startIndex = (page - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+            const paginatedComplaints = filteredComplaints.slice(startIndex, endIndex);
+            
+            // Update table body
+            const tableBody = document.getElementById('complaintsTableBody');
+            tableBody.innerHTML = '';
+            
+            paginatedComplaints.forEach(complaint => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${complaint.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${complaint.type}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${complaint.trainNumber || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${complaint.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${getStatusBadge(complaint.status)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button class="text-blue-600 hover:text-blue-900 mr-3" onclick="viewComplaint('${complaint.id}')"><i class="fas fa-eye"></i></button>
+                        <button class="text-green-600 hover:text-green-900 mr-3" onclick="resolveComplaint('${complaint.id}')"><i class="fas fa-check"></i></button>
+                        <button class="text-red-600 hover:text-red-900" onclick="deleteComplaint('${complaint.id}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // Update pagination info
+            document.getElementById('startItem').textContent = startIndex + 1;
+            document.getElementById('endItem').textContent = endIndex;
+            document.getElementById('totalItems').textContent = totalItems;
+            
+            // Update pagination buttons
+            const paginationDiv = document.getElementById('pagination');
+            paginationDiv.innerHTML = '';
+            
+            if (page > 1) {
+                const prevButton = document.createElement('button');
+                prevButton.className = 'px-3 py-1 border rounded text-gray-700 bg-gray-50 hover:bg-gray-100';
+                prevButton.textContent = 'Previous';
+                prevButton.onclick = () => loadComplaints(page - 1, searchTerm);
+                paginationDiv.appendChild(prevButton);
+            }
+            
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.className = `px-3 py-1 border rounded ${i === page ? 'bg-blue-600 text-white' : 'text-gray-700 bg-gray-50 hover:bg-gray-100'}`;
+                pageButton.textContent = i;
+                pageButton.onclick = () => loadComplaints(i, searchTerm);
+                paginationDiv.appendChild(pageButton);
+            }
+            
+            if (page < totalPages) {
+                const nextButton = document.createElement('button');
+                nextButton.className = 'px-3 py-1 border rounded text-gray-700 bg-gray-50 hover:bg-gray-100';
+                nextButton.textContent = 'Next';
+                nextButton.onclick = () => loadComplaints(page + 1, searchTerm);
+                paginationDiv.appendChild(nextButton);
+            }
+        }
+        
+        // Filter complaints based on search term
+        function filterComplaints(searchTerm) {
+            loadComplaints(1, searchTerm);
+        }
+        
+        // Get status badge HTML
+        function getStatusBadge(status) {
+            const statusClasses = {
+                'Received': 'bg-blue-100 text-blue-800',
+                'In Progress': 'bg-yellow-100 text-yellow-800',
+                'Resolved': 'bg-green-100 text-green-800',
+                'Escalated': 'bg-red-100 text-red-800'
+            };
+            
+            return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses[status] || 'bg-gray-100 text-gray-800'}">${status}</span>`;
+        }
+        
+        // Load recent activity
+        function loadRecentActivity() {
+            const complaints = JSON.parse(localStorage.getItem('railmadad_complaints')) || [];
+            const recentComplaints = [...complaints].reverse().slice(0, 4); // Get 4 most recent
+            
+            const activityDiv = document.getElementById('recentActivity');
+            activityDiv.innerHTML = '';
+            
+            recentComplaints.forEach(complaint => {
+                const activityItem = document.createElement('div');
+                activityItem.className = 'p-4 hover:bg-gray-50';
+                
+                let iconClass = '';
+                let bgColor = '';
+                let icon = '';
+                
+                switch(complaint.status) {
+                    case 'Resolved':
+                        iconClass = 'text-green-600';
+                        bgColor = 'bg-green-100';
+                        icon = 'fa-check-circle';
+                        break;
+                    case 'In Progress':
+                        iconClass = 'text-yellow-600';
+                        bgColor = 'bg-yellow-100';
+                        icon = 'fa-user-shield';
+                        break;
+                    case 'Escalated':
+                        iconClass = 'text-red-600';
+                        bgColor = 'bg-red-100';
+                        icon = 'fa-exclamation-triangle';
+                        break;
+                    default:
+                        iconClass = 'text-blue-600';
+                        bgColor = 'bg-blue-100';
+                        icon = 'fa-exclamation-circle';
+                }
+                
+                activityItem.innerHTML = `
+                    <div class="flex items-start">
+                        <div class="${bgColor} p-2 rounded-full mr-3">
+                            <i class="fas ${icon} ${iconClass}"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between">
+                                <p class="font-medium text-gray-800">${complaint.status} Complaint</p>
+                                <span class="text-xs text-gray-500">${complaint.date}</span>
+                            </div>
+                            <p class="text-sm text-gray-600">${complaint.id} - ${complaint.type} ${complaint.trainNumber ? 'on ' + complaint.trainNumber : ''}</p>
+                        </div>
+                    </div>
+                `;
+                activityDiv.appendChild(activityItem);
+            });
+        }
+        
+        // View complaint details
+        function viewComplaint(complaintId) {
+            const complaints = JSON.parse(localStorage.getItem('railmadad_complaints')) || [];
+            const complaint = complaints.find(c => c.id === complaintId);
+            
+            if (complaint) {
+                currentComplaintId = complaintId;
+                
+                // Populate modal with complaint data
+                document.getElementById('complaintIdDisplay').textContent = complaint.id;
+                document.getElementById('complaintCategory').textContent = complaint.type;
+                document.getElementById('complaintTrain').textContent = complaint.trainNumber || 'N/A';
+                document.getElementById('complaintDate').textContent = complaint.date;
+                document.getElementById('complaintStatus').innerHTML = getStatusBadge(complaint.status);
+                document.getElementById('passengerName').textContent = complaint.name;
+                document.getElementById('passengerContact').textContent = complaint.phone;
+                document.getElementById('passengerPnr').textContent = complaint.pnr || 'N/A';
+                document.getElementById('passengerEmail').textContent = complaint.email || 'N/A';
+                document.getElementById('complaintDescription').textContent = complaint.description;
+                document.getElementById('resolutionTextarea').value = complaint.resolution || '';
+                
+                // Show modal
+                document.getElementById('complaintDetailModal').classList.remove('hidden');
+                document.getElementById('successMessage').style.display = 'none';
+            }
+        }
+        
+        // Save resolution text
+        function saveResolution() {
+            const complaints = JSON.parse(localStorage.getItem('railmadad_complaints')) || [];
+            const complaintIndex = complaints.findIndex(c => c.id === currentComplaintId);
+            
+            if (complaintIndex !== -1) {
+                complaints[complaintIndex].resolution = document.getElementById('resolutionTextarea').value;
+                localStorage.setItem('railmadad_complaints', JSON.stringify(complaints));
+                
+                // Show success message
+                document.getElementById('successMessage').style.display = 'block';
+                
+                // Reload data
+                setTimeout(() => {
+                    loadDashboard();
+                    loadComplaints();
+                }, 1000);
+            }
+        }
+        
+        // Resolve complaint
+        function resolveComplaint(complaintId = null) {
+            const id = complaintId || currentComplaintId;
+            const complaints = JSON.parse(localStorage.getItem('railmadad_complaints')) || [];
+            const complaintIndex = complaints.findIndex(c => c.id === id);
+            
+            if (complaintIndex !== -1) {
+                complaints[complaintIndex].status = 'Resolved';
+                complaints[complaintIndex].resolvedDate = new Date().toLocaleString();
+                localStorage.setItem('railmadad_complaints', JSON.stringify(complaints));
+                
+                if (complaintId) {
+                    // Called from table directly
+                    loadDashboard();
+                    loadComplaints();
+                } else {
+                    // Called from modal
+                    document.getElementById('successMessage').style.display = 'block';
+                    document.getElementById('complaintStatus').innerHTML = getStatusBadge('Resolved');
+                    
+                    setTimeout(() => {
+                        loadDashboard();
+                        loadComplaints();
+                    }, 1000);
+                }
+            }
+        }
+        
+        // Escalate complaint
+        function escalateComplaint() {
+            const complaints = JSON.parse(localStorage.getItem('railmadad_complaints')) || [];
+            const complaintIndex = complaints.findIndex(c => c.id === currentComplaintId);
+            
+            if (complaintIndex !== -1) {
+                complaints[complaintIndex].status = 'Escalated';
+                localStorage.setItem('railmadad_complaints', JSON.stringify(complaints));
+                
+                document.getElementById('successMessage').style.display = 'block';
+                document.getElementById('complaintStatus').innerHTML = getStatusBadge('Escalated');
+                
+                setTimeout(() => {
+                    loadDashboard();
+                    loadComplaints();
+                }, 1000);
+            }
+        }
+        
+        // Delete complaint
+        function deleteComplaint(complaintId) {
+            if (confirm('Are you sure you want to delete this complaint?')) {
+                const complaints = JSON.parse(localStorage.getItem('railmadad_complaints')) || [];
+                const updatedComplaints = complaints.filter(c => c.id !== complaintId);
+                localStorage.setItem('railmadad_complaints', JSON.stringify(updatedComplaints));
+                
+                loadDashboard();
+                loadComplaints();
+            }
+        }
+        
+        // Complaint detail modal
+        const complaintDetailModal = document.getElementById('complaintDetailModal');
+        const closeDetailModalBtn = document.getElementById('closeDetailModalBtn');
+        
+        closeDetailModalBtn.addEventListener('click', () => {
+            complaintDetailModal.classList.add('hidden');
+        });
+        
+        // Close modal when clicking outside
+        complaintDetailModal.addEventListener('click', (e) => {
+            if (e.target === complaintDetailModal) {
+                complaintDetailModal.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
